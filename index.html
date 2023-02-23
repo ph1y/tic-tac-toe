@@ -5,11 +5,34 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="styles/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Roboto&family=Gochi+Hand&display=swap"
+      rel="stylesheet"
+    />
     <script src="scripts/script.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <title>Tic Tac Toe</title>
   </head>
   <body>
-    <h1>Tic Tac Toe</h1>
-    <div class="gameboard-container"></div>
+    <div class="header">
+      <h1>Tic Tac Toe</h1>
+    </div>
+    <div class="input-area">
+      <div class="input-heading">Please enter the player's names.</div>
+      <form action="" method="post" class="input-form">
+        <label for="player1">Player 1</label>
+        <input type="text" name="player1" id="player1" />
+        <label for="player2">Player 2</label>
+        <input type="text" name="player2" id="player2" />
+        <button type="submit">Start Game</button>
+      </form>
+    </div>
+    <div class="status-area" hidden></div>
+    <div class="gameboard-container" hidden></div>
+    <div class="controls" hidden>
+      <button type="button" id="new-round-btn">New Round</button>
+      <button type="button" id="reset-btn">Reset</button>
+    </div>
   </body>
 </html>

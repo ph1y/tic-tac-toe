@@ -1,12 +1,13 @@
 const gameboard = (function () {
-  const board = Array(3)
-    .fill(null)
-    .map(() => Array(3).fill(null));
-
+  let board = [];
   const boardContainer = document.querySelector(".gameboard-container");
 
   function render() {
     boardContainer.replaceChildren();
+
+    board = Array(3)
+      .fill(null)
+      .map(() => Array(3).fill(null));
 
     board.forEach((outerElem, i) => {
       outerElem.forEach((innerElem, j) => {
@@ -26,12 +27,15 @@ const gameboard = (function () {
     });
   }
 
-  function placeMarker(y, x, marker) {
+  function placeMarker(y, x, player) {
     if (board[y][x] === null) {
-      board[y][x] = marker;
+      board[y][x] = player.getMarker();
       update();
     } else {
-      alert("Choose different cell.");
+      gameController.updateStatusMsg(
+        `${player.getName()}, choose a different cell.`
+      );
+      gameController.switchPlayer();
     }
   }
 
@@ -65,16 +69,14 @@ const playerFactory = (playerName, playerMarker) => {
 };
 
 const gameController = (function () {
-  const player1 = playerFactory("Player 1", "X");
-  const player2 = playerFactory("Player 2", "O");
-  const players = [player1, player2];
+  let player1 = {};
+  let player2 = {};
+  let players = [];
+  let gameOver = false;
+  const statusArea = document.querySelector(".status-area");
 
   function switchPlayer() {
     [players[0], players[1]] = [players[1], players[0]];
-  }
-
-  function declareWinner(player) {
-    console.log(`${player.getName()} has won!`);
   }
 
   function checkResult(player) {
@@ -126,32 +128,101 @@ const gameController = (function () {
       return result;
     }
 
-    if (checkStraight() || checkDiagonally()) {
-      declareWinner(player);
-    }
+    return checkStraight() || checkDiagonally();
+  }
+
+  function checkTie() {
+    let result = true;
+
+    gameboard.getBoard().forEach((outerElem) => {
+      if (outerElem.some((innerElem) => innerElem === null)) {
+        result = false;
+      }
+    });
+
+    return result;
+  }
+
+  function updateStatusMsg(msg) {
+    statusArea.textContent = msg;
   }
 
   function playRound(event) {
     const { y, x } = event.target.dataset;
     const activePlayer = players[0];
+    const nextPlayer = players[1];
 
-    gameboard.placeMarker(y, x, activePlayer.getMarker());
+    if (!gameOver) {
+      updateStatusMsg(`${nextPlayer.getName()}'s turn.`);
+      gameboard.placeMarker(y, x, activePlayer);
+    }
 
-    checkResult(activePlayer);
-    switchPlayer();
+    if (checkResult(activePlayer) && !gameOver) {
+      gameOver = true;
+      updateStatusMsg(`${activePlayer.getName()} has won!`);
+    } else if (checkTie()) {
+      gameOver = true;
+      updateStatusMsg("It is a tie!");
+    } else if (!gameOver) {
+      switchPlayer();
+    }
   }
 
-  function init() {
+  function setUpInterface() {
     gameboard.render();
 
     const gameboardCells = document.querySelectorAll(".cell");
     gameboardCells.forEach((cell) => {
       cell.addEventListener("click", playRound);
     });
+
+    const inputArea = document.querySelector(".input-area");
+    inputArea.setAttribute("hidden", true);
+
+    statusArea.removeAttribute("hidden");
+    updateStatusMsg(`${player1.getName()}'s turn.`);
+
+    const boardContainer = document.querySelector(".gameboard-container");
+    boardContainer.removeAttribute("hidden");
+
+    const controls = document.querySelector(".controls");
+    controls.removeAttribute("hidden");
+
+    const newRoundBtn = document.querySelector("#new-round-btn");
+    newRoundBtn.addEventListener("click", () => {
+      gameOver = false;
+      players = [player1, player2];
+      setUpInterface();
+    });
+
+    const resetBtn = document.querySelector("#reset-btn");
+    resetBtn.addEventListener("click", () => {
+      window.location.reload(true);
+    });
+  }
+
+  function init() {
+    const inputForm = document.querySelector(".input-form");
+    inputForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+
+      const input = new FormData(event.target);
+      player1 = playerFactory(input.get("player1"), "X");
+      player2 = playerFactory(input.get("player2"), "O");
+      players = [player1, player2];
+
+      if (player1.getName() !== "" && player2.getName() !== "") {
+        setUpInterface();
+      } else {
+        alert("Please enter the player's names to start the game.");
+      }
+    });
   }
 
   return {
     init,
+    updateStatusMsg,
+    switchPlayer,
   };
 })();
 
